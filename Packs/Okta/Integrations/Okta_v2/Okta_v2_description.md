@@ -33,7 +33,7 @@ The following scopes are required for the Okta v2 integration to work properly:
 
 
 ### Prerequisites
-1. Generate an API token as described previously. This is required for some backend API calls that are needed to set up OAuth authentication.
+1. Generate an API token using the same steps described on the [Authentication using API Token](#authentication-using-api-token) section. This is required for some backend API calls that are needed for the initial set up of OAuth authentication.
 2. Sign in to your Okta organization as a user with administrative privileges.
 3. In the Admin Console, go to **Applications** > **Applications**.
 4. Click **Create App Integration**.
@@ -42,7 +42,10 @@ The following scopes are required for the Okta v2 integration to work properly:
 7. On the app configuration page, under the **General** tab and the **Client Credentials** section, select **Public key / Private key** for the **Client authentication** option.
 8. Under the newly added **PUBLIC KEYS** section, click the **Add Key** button.
 9. In the **Add Public Key** dialog box, click **Generate new key**, and make sure to keep the private key (in PEM format) in somewhere safe.
-10. On the app configuration page, under the **Okta API Scopes** tab, make sure that the required scopes mentioned above are granted.
+10. Under **General Settings** section:
+      1. Next to the **Proof of possession** label, uncheck the **Require Demonstrating Proof of Possession (DPoP) header in token requests** option if it's selected.
+      2. Next to the **Grant type** label, make sure the **Client Credentials** option is selected, and that the **Token Exchange** option is not selected.
+11. On the app configuration page, under the **Okta API Scopes** tab, make sure that the required scopes mentioned above are granted.
 
 For more information, see the '[Implement OAuth for Okta
 ](https://developer.okta.com/docs/guides/implement-oauth-for-okta/main/)' official documentation article.
