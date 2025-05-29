@@ -570,22 +570,59 @@ class Client(BaseClient):
 def test_module(client, data_args):
     if client.do_request("GET", "system_status"):
         return demisto.results("ok")
-    raise ValueError("Test Tanium integration failed - please check your username and password")
+    raise ValueError("Test Tanium integration failed - please check your authentication credential")
 
 
 def get_system_status(client, data_args):
-    raw_response = client.do_request("GET", "system_status")
-    response = raw_response.get("data")
+    row_count = 15000
+    all_results = []
+    row_start = 0
+    another_page = True
+
+    while another_page:
+        tanium_options = json.dumps({
+            "row_start": row_start,
+            "row_count": row_count
+        })
+
+        if not client.session:
+            client.update_session()
+
+        res = client._http_request(
+            "GET",
+            "system_status",
+            headers={"session": client.session, "tanium-options": tanium_options},
+            json_data=None,
+            resp_type="response",
+            ok_codes=[200, 400, 401, 403, 404],
+        )
+
+        if res.status_code == 403:
+            client.update_session()
+            res = client._http_request(
+                "GET",
+                "system_status",
+                headers={"session": client.session, "tanium-options": tanium_options},
+                json_data=None,
+                ok_codes=[200, 400, 404]
+            )
+
+        raw_response = res.json()
+        response = raw_response.get("data")
+
+        page_results = [item for item in response if item.get("computer_id")]
+        another_page = (len(page_results) >= row_count)
+        all_results.extend(page_results)
+        row_start += row_count
 
     context = []
-    for item in response:
-        if item.get("computer_id"):
-            context.append(client.get_host_item(item))
+    for item in all_results:
+        context.append(client.get_host_item(item))
 
     context = createContext(context, removeNull=True)
     outputs = {"Tanium.Client(val.ComputerId && val.ComputerId === obj.ComputerId)": context}
     human_readable = tableToMarkdown("System status", context)
-    return human_readable, outputs, raw_response
+    return human_readable, outputs, {"data": all_results}
 
 
 def get_package(client, data_args):
